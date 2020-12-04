@@ -71,13 +71,16 @@ app.use(bodyparser());
     const handler = await ApiHandler.create('wss://kusama-rpc.polkadot.io/');
     const onekvWrapper = new OnekvWrapper(handler);
     const router = new Router();
+    router.get('/', async (ctx) => {
+      ctx.body = 'Welcome validators.';
+    });
     router.get(API.ValidCandidates, async (ctx) => {
       const valid = await onekvWrapper.valid();
       ctx.body = valid;
-    })
+    });
 
     app.use(router.routes());
-    app.listen(3000);
+    app.listen(80);
 
 
   } catch (e) {
