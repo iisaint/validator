@@ -7,6 +7,8 @@ const Router = require('koa-router');
 const ApiHandler = require('./ApiHandler');
 const OnekvWrapper = require('./onekvWrapper');
 
+const PORT = process.env.PORT || 3000;
+
 const API = {
   ValidCandidates: '/valid',
 }
@@ -80,7 +82,8 @@ app.use(bodyparser());
     });
 
     app.use(router.routes());
-    app.listen(80);
+
+    app.listen(PORT);
 
 
   } catch (e) {
