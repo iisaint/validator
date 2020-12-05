@@ -12,7 +12,7 @@ module.exports = class ChainData {
     const activeEra = await api.query.staking.activeEra();
     // console.log(`activeEra = ${activeEra}`);
     if (activeEra.isNone) {
-      logger.info(`NO ACTIVE ERA: ${activeEra.toString()}`);
+      console.log(`NO ACTIVE ERA: ${activeEra.toString()}`);
       return [
         null,
         `Acitve era not found, this chain is might be using an older staking pallet.`,
@@ -22,14 +22,14 @@ module.exports = class ChainData {
   };
 
   findEraBlockHash = async (era) => {
-    console.log(`era = ${era}`);
+    // console.log(`era = ${era}`);
     const api = await this.handler.getApi();
     const [activeEraIndex, err] = await this.getActiveEraIndex();
     if (err) {
       return [null, err];
     }
     
-    console.log(`activeEraIndex = ${activeEraIndex}`);
+    // console.log(`activeEraIndex = ${activeEraIndex}`);
 
     if (era > activeEraIndex) {
       return [null, "Era has not happened."];
@@ -37,7 +37,7 @@ module.exports = class ChainData {
   
     const latestBlock = await api.rpc.chain.getBlock();
     if (era === activeEraIndex) {
-      console.log(`era == activeEraIndex`);
+      // console.log(`era == activeEraIndex`);
       return [latestBlock.block.header.hash.toString(), null];
     }
   
