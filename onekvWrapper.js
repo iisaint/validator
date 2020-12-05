@@ -47,7 +47,50 @@ module.exports = class OnekvWrapper {
 
       return valid;
     } else {
-      return null;
+      return [];
+    }
+  }
+
+  nominators = async () => {
+    let res = await axios.get('https://kusama.w3f.community/nominators');
+    if (res.status === 200) {
+      let nominators = res.data;
+
+      let validCandidates = await this.valid();
+
+      nominators = nominators.map((nominator, index, array) => {
+        const current = nominator.current.map((stash, index, array) => {
+          let candidate = validCandidates.valid.find((c, index, array) => {
+            return stash === c.stash;
+          });
+          console.log(candidate);
+          if (candidate === undefined) {
+            return {
+              stash,
+              name: null,
+              elected: null
+            }
+          } else {
+            return {
+              stash: stash,
+              name: candidate.name,
+              elected: candidate.elected
+            }
+          }
+        });
+        return {
+          current,
+          lastNomination: moment(nominator.lastNomination).format(),
+          createdAt: moment(nominator.createdAt).format(),
+          _id: nominator._id,
+          address: nominator.address,
+          __v: nominator.__v,
+        }
+      });
+
+      return nominators;
+    } else {
+      return [];
     }
   }
 }

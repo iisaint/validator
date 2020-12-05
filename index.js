@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 const API = {
   ValidCandidates: '/valid',
+  Nominators: '/nominators'
 }
 
 const app = new Koa();
@@ -73,12 +74,19 @@ app.use(bodyparser());
     const handler = await ApiHandler.create('wss://kusama-rpc.polkadot.io/');
     const onekvWrapper = new OnekvWrapper(handler);
     const router = new Router();
+    
     router.get('/', async (ctx) => {
       ctx.body = 'Welcome validators.';
     });
+
     router.get(API.ValidCandidates, async (ctx) => {
       const valid = await onekvWrapper.valid();
       ctx.body = valid;
+    });
+
+    router.get(API.Nominators, async (ctx) => {
+      const nominators = await onekvWrapper.nominators();
+      ctx.body = nominators;
     });
 
     app.use(router.routes());
