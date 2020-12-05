@@ -16,9 +16,9 @@ module.exports = class OnekvWrapper {
       
       // retrive active validators
       const [activeEra, err] = await this.chaindata.getActiveEraIndex();
-      console.log(activeEra);
+      // console.log(activeEra);
       const [blockHash, err2] = await this.chaindata.findEraBlockHash(activeEra);
-      console.log(blockHash);
+      // console.log(blockHash);
       const validators = await this.chaindata.getValidatorsByEraBlockHash(blockHash);
       const activeStash = validators.toHuman();
 
