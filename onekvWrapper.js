@@ -63,7 +63,6 @@ module.exports = class OnekvWrapper {
           let candidate = validCandidates.valid.find((c, index, array) => {
             return stash === c.stash;
           });
-          console.log(candidate);
           if (candidate === undefined) {
             return {
               stash,
@@ -92,6 +91,55 @@ module.exports = class OnekvWrapper {
     } else {
       return [];
     }
+  }
+
+  statistic = async (network, stash) => {
+    let list = [];
+    let page = 0;
+    let res;
+    do {
+      res = await this.chaindata.getRewardSlashFromSubscan(network, stash, page);
+
+      if (res === null) {
+        return [];
+      }
+
+      list = [...list, ...res.data.list];
+      page++;
+    } while (res.data.list.length > 0);
+
+    if (list.length === 0) {
+      return list;
+    }
+
+    // console.log(list[0]);
+
+    let amounts = list.map((item) => {
+      return parseInt(item.amount, 10);
+    })
+    
+    const to = moment.unix(list[0].block_timestamp);
+    const from = moment.unix(list[list.length-1].block_timestamp);
+    // console.log('----------------')
+    // console.log(`Validator：${stash}`);
+    // console.log(`執行(天) ：${to.diff(from, 'days')}`);
+    // console.log(`收益(KSM)：${amounts.reduce((a, c) => {
+    //   return a + c
+    // })/1000000000000}`);
+    // console.log(`tx count: ${list.length}`)
+
+    let totalReward = amounts.reduce((a, c) => {
+      return a + c
+    })/1000000000000;
+
+    list = {
+      stash,
+      totalReward_KSM: totalReward,
+      firstReward: from,
+      latestReward: to
+    }
+
+    return list;
   }
 }
 

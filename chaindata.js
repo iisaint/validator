@@ -1,3 +1,4 @@
+const axios = require('axios');
 const KUSAMA_APPROX_ERA_LENGTH_IN_BLOCKS = 3600;
 
 module.exports = class ChainData {
@@ -69,4 +70,18 @@ module.exports = class ChainData {
     return validators;
   }
 
+  getRewardSlashFromSubscan = async (network, stash, page) => {
+    const res = await axios.post(`https://${network}.subscan.io/api/scan/account/reward_slash`, {
+      row: 20,
+      page,
+      address: stash
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    // console.log(res);
+    if (res.status === 200 && res.data.code === 0) {
+      return res.data;
+    }
+    return null;
+  }
 }

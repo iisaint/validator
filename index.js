@@ -11,7 +11,8 @@ const PORT = process.env.PORT || 3000;
 
 const API = {
   ValidCandidates: '/valid',
-  Nominators: '/nominators'
+  Nominators: '/nominators',
+  Statistic: '/statistic/:stash'
 }
 
 const app = new Koa();
@@ -87,6 +88,13 @@ app.use(bodyparser());
     router.get(API.Nominators, async (ctx) => {
       const nominators = await onekvWrapper.nominators();
       ctx.body = nominators;
+    });
+
+    router.get(API.Statistic, async (ctx) => {
+      const { stash } = ctx.params;
+      console.log(stash);
+      const statistic = await onekvWrapper.statistic('kusama', stash);
+      ctx.body = statistic;
     });
 
     app.use(router.routes());
