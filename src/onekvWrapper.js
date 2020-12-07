@@ -16,10 +16,7 @@ module.exports = class OnekvWrapper {
       let valid = res.data;
       
       // retrive active validators
-      const [activeEra, err] = await this.chaindata.getActiveEraIndex();
-      const [blockHash, err2] = await this.chaindata.findEraBlockHash(activeEra);
-      const validators = await this.chaindata.getValidatorsByEraBlockHash(blockHash);
-      const activeStash = validators.toHuman();
+      const [activeEra, activeStash] = await this.chaindata.getValidators();
 
       // make infomation more readable
       let electedCount = 0;
@@ -130,6 +127,51 @@ module.exports = class OnekvWrapper {
     }
 
     return list;
+  }
+
+  falseNominator = async () => {
+    const nominators = await this.nominators();
+    const activeStash = await this.chaindata.getValidators();
+    let res = await axios.get('https://kusama.w3f.community/candidates');
+    if (res.status !== 200) {
+      return [];
+    }
+    const candidates = res.data;
+    res = await axios.get('https://kusama.w3f.community/invalid');
+    if (res.status !== 200) {
+      return [];
+    }
+    let invalid = res.data;
+    invalid = invalid.split(/\n/);
+
+    // collect false nominations. only valid candidate should be nominated by 1kv.
+    let falseNominator = [];
+    nominators.forEach(nominator => {
+      nominator.current.forEach(stash => {
+        if (stash.name === null || stash.elected === null) {
+          stash.nominatorAddress = nominator.address;
+
+          // get name of candidate
+          const candidate = candidates.find((c) => {
+            return c.stash === stash.stash;
+          });
+
+          if (activeStash.indexOf(stash) !== -1) {
+            stash.elected = true;
+          } else {
+            stash.elected = false;
+          }
+
+          stash.name = candidate.name;
+          const reason = invalid.find((i) => {
+            return i.indexOf(stash.name) !== -1;
+          })
+          stash.reason = reason;
+          falseNominator.push(stash);
+        }
+      });
+    });
+    return falseNominator;
   }
 }
 

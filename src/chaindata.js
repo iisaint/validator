@@ -70,6 +70,15 @@ module.exports = class ChainData {
     return validators;
   }
 
+  getValidators = async () => {
+    // retrive active validators
+    const [activeEra, err] = await this.getActiveEraIndex();
+    const [blockHash, err2] = await this.findEraBlockHash(activeEra);
+    const validators = await this.getValidatorsByEraBlockHash(blockHash);
+    const activeStash = validators.toHuman();
+    return [activeEra, activeStash];
+  }
+
   getRewardSlashFromSubscan = async (network, stash, page) => {
     const res = await axios.post(`https://${network}.subscan.io/api/scan/account/reward_slash`, {
       row: 20,

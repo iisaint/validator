@@ -12,7 +12,8 @@ const PORT = process.env.PORT || 3000;
 const API = {
   ValidCandidates: '/valid',
   Nominators: '/nominators',
-  Statistic: '/statistic/:stash'
+  Statistic: '/statistic/:stash',
+  FalseNominations: '/falseNominations'
 }
 
 const app = new Koa();
@@ -46,6 +47,11 @@ app.use(bodyparser());
       console.log(stash);
       const statistic = await onekvWrapper.statistic('kusama', stash);
       ctx.body = statistic;
+    });
+
+    router.get(API.FalseNominations, async (ctx) => {
+      const falseNominator = await onekvWrapper.falseNominator();
+      ctx.body = falseNominator;
     });
 
     app.use(router.routes());
