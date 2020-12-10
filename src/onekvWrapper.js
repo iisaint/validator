@@ -1,6 +1,7 @@
 const axios = require('axios');
 const moment = require('moment');
 const ChainData = require('./chaindata');
+const CacheData = require('./cachedata');
 
 const KUSAMA_DECIMAL = 1000000000000;
 
@@ -8,13 +9,33 @@ module.exports = class OnekvWrapper {
   constructor(handler) {
     this.handler = handler
     this.chaindata = new ChainData(handler);
+    this.cachedata = new CacheData();
   }
 
-  valid = async () => {
+  valid = async (era) => {
     let res = await axios.get('https://kusama.w3f.community/valid');
     if (res.status === 200) {
       let valid = res.data;
+
+      if (valid.length === 0) {
+        console.log('true');
+      } else {
+        console.log('false');
+      }
       
+      // retrive active era
+      if (era === undefined) {
+        era = await this.chaindata.getActiveEraIndex();
+      }
+      
+      // check cache data to retive data
+      const data = await this.cachedata.fetch(era, 'valid');
+
+      if (data !== null) {
+        return data;
+      }
+
+
       // retrive active validators
       const [activeEra, activeStash] = await this.chaindata.getValidators();
 
@@ -36,10 +57,13 @@ module.exports = class OnekvWrapper {
 
       valid = {
         activeEra,
+        validatorCount: valid.length,
         electedCount,
         electionRate: (electedCount / valid.length),
         valid: valid,
       }
+
+      this.cachedata.update('valid', valid);
 
       return valid;
     } else {
@@ -48,11 +72,19 @@ module.exports = class OnekvWrapper {
   }
 
   nominators = async () => {
+    // retrive active era
+    const [era, err] = await this.chaindata.getActiveEraIndex();
+    // check cache data to retive data
+    const data = await this.cachedata.fetch(era, 'nominators');
+    if (data !== null) {
+      return data;
+    }
+
     let res = await axios.get('https://kusama.w3f.community/nominators');
     if (res.status === 200) {
       let nominators = res.data;
 
-      let validCandidates = await this.valid();
+      let validCandidates = await this.valid(era);
 
       nominators = nominators.map((nominator, index, array) => {
         const current = nominator.current.map((stash, index, array) => {
@@ -83,8 +115,16 @@ module.exports = class OnekvWrapper {
         }
       });
 
+      nominators = {
+        activeEra: parseInt(era),
+        nominators
+      }
+
+      this.cachedata.update('nominators', nominators);
+
       return nominators;
     } else {
+      this.cachedata.update('nominators', []);
       return [];
     }
   }
