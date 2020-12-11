@@ -50,9 +50,8 @@ app.use(bodyparser());
     });
 
     router.get(API.FalseNominations, async (ctx) => {
-      // const falseNominator = await onekvWrapper.falseNominator();
-      // ctx.body = falseNominator;
-      ctx.body = 'not support';
+      const falseNominator = await onekvWrapper.falseNominator();
+      ctx.body = falseNominator;
     });
 
     app.use(router.routes());

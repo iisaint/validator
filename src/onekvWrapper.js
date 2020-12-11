@@ -170,7 +170,8 @@ module.exports = class OnekvWrapper {
   }
 
   falseNominator = async () => {
-    const nominators = await this.nominators();
+    let nominators = await this.nominators();
+    nominators = nominators.nominators;
     const activeStash = await this.chaindata.getValidators();
     let res = await axios.get('https://kusama.w3f.community/candidates');
     if (res.status !== 200) {
