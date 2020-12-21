@@ -141,4 +141,10 @@ module.exports = class ChainData {
     );
     return validPoints;
   }
+
+  getStakerPoints = async (stash) => {
+    const api = await this.handler.getApi();
+    const stakerPoints = await api.derive.staking.stakerPoints(stash);
+    return stakerPoints;
+  }
 }
