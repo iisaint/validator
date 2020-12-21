@@ -15,6 +15,7 @@ const API = {
   Statistic: '/statistic/:stash',
   FalseNominations: '/falseNominations',
   Validators: '/validators',
+  onekv: '/onekv',
 }
 
 const app = new Koa();
@@ -59,6 +60,21 @@ app.use(bodyparser());
       const validators = await onekvWrapper.getValidators();
       ctx.body = validators;
     });
+
+    router.get(API.onekv, async (ctx) => {
+      const validators = await onekvWrapper.getValidators();
+      let list = [];
+      validators.valid.forEach((validator) => {
+        list.push({
+          stash: validator.stash,
+          name: validator.name,
+          rank: validator.rank,
+          electedRate: validator.electedRate,
+          eras: `from ${validator.stakerPoints[0].era} to ${validator.stakerPoints[validator.stakerPoints.length - 1].era}`,
+        })
+      })
+      ctx.body = list;
+    })
 
     app.use(router.routes());
 

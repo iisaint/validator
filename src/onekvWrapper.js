@@ -16,12 +16,6 @@ module.exports = class OnekvWrapper {
     let res = await axios.get('https://kusama.w3f.community/valid');
     if (res.status === 200) {
       let valid = res.data;
-
-      if (valid.length === 0) {
-        console.log('true');
-      } else {
-        console.log('false');
-      }
       
       // retrive active era
       if (era === undefined) {
