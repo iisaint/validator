@@ -159,11 +159,23 @@ module.exports = class OnekvWrapper {
       return a + c
     })/KUSAMA_DECIMAL;
 
+    // average elected rate within 2 weeks
+    let ElectedRate_2_weeks = 0;
+    const validatorsList = await this.getValidators();
+    validatorsList.forEach((list) => {
+      if (list.activeStash.indexOf(stash) !== -1) {
+        ElectedRate_2_weeks++;
+      }
+    });
+
+    ElectedRate_2_weeks = ElectedRate_2_weeks / validatorsList.length;
+
     list = {
       stash,
       totalReward_KSM: totalReward,
       firstReward: from,
-      latestReward: to
+      latestReward: to,
+      ElectedRate_2_weeks
     }
 
     return list;
@@ -214,5 +226,21 @@ module.exports = class OnekvWrapper {
     });
     return falseNominator;
   }
+
+  getValidators = async () => {
+    let data = await this.valid();
+    if (data.valid.length === 0) {
+      return [];
+    }
+    // sorted by rank
+    let valid = data.valid.sort((a, b) => {
+      return parseInt(b.rank) - parseInt(a.rank);
+    });
+    data.valid = await this.chaindata.getValidatorInfo(valid);
+
+    return data;
+  }
+
+
 }
 

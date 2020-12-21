@@ -13,7 +13,8 @@ const API = {
   ValidCandidates: '/valid',
   Nominators: '/nominators',
   Statistic: '/statistic/:stash',
-  FalseNominations: '/falseNominations'
+  FalseNominations: '/falseNominations',
+  Validators: '/validators',
 }
 
 const app = new Koa();
@@ -52,6 +53,11 @@ app.use(bodyparser());
     router.get(API.FalseNominations, async (ctx) => {
       const falseNominator = await onekvWrapper.falseNominator();
       ctx.body = falseNominator;
+    });
+
+    router.get(API.Validators, async (ctx) => {
+      const validators = await onekvWrapper.getValidators();
+      ctx.body = validators;
     });
 
     app.use(router.routes());

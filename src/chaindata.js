@@ -1,4 +1,5 @@
 const axios = require('axios');
+const BigNumber = require('bignumber.js');
 const KUSAMA_APPROX_ERA_LENGTH_IN_BLOCKS = 3600;
 
 module.exports = class ChainData {
@@ -79,6 +80,24 @@ module.exports = class ChainData {
     return [activeEra, activeStash];
   }
 
+  getValidatorsList = async () => {
+    // retrieve active validators from one months ago
+    let validatorsList = [];
+    const [activeEra, err] = await this.getActiveEraIndex();
+    const pastEra = activeEra - 2 * 4; // back to one month
+    for (let era=pastEra; era <= activeEra; era++) {
+      const [blockHash, err2] = await this.findEraBlockHash(era);
+      const validators = await this.getValidatorsByEraBlockHash(blockHash);
+      const activeStash = validators.toHuman();
+      validatorsList.push({
+        era,
+        activeStash
+      });
+      console.log(validatorsList);
+    }
+    return validatorsList;
+  }
+
   getRewardSlashFromSubscan = async (network, stash, page) => {
     const res = await axios.post(`https://${network}.subscan.io/api/scan/account/reward_slash`, {
       row: 20,
@@ -92,5 +111,34 @@ module.exports = class ChainData {
       return res.data;
     }
     return null;
+  }
+
+  getValidatorInfo = async (valid) => {
+    const startTime = new Date().getTime();
+    const api = await this.handler.getApi();
+
+    let validPoints = await Promise.all(
+      valid.map(async (candidate) => {
+        const stakerPoints = await api.derive.staking.stakerPoints(candidate.stash);
+        let electedCount = 0;
+        stakerPoints.forEach((i) => {
+          if (parseInt(i.points) !== 0) {
+            electedCount++;
+          }
+        })
+        return {
+          ...candidate,
+          electedRate: electedCount / stakerPoints.length,
+          stakerPoints
+        }
+      })
+    )
+    const dataCollectionEndTime = new Date().getTime()
+    const dataCollectionTime = dataCollectionEndTime - startTime
+    // eslint-disable-next-line
+    console.log(
+      `data collection time: ${(dataCollectionTime / 1000).toFixed(3)}s`
+    );
+    return validPoints;
   }
 }
