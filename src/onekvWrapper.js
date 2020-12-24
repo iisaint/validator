@@ -1,7 +1,7 @@
 const axios = require('axios');
 const moment = require('moment');
 const ChainData = require('./chaindata');
-const CacheData = require('./cachedata');
+// const CacheData = require('./cachedata');
 
 const KUSAMA_DECIMAL = 1000000000000;
 
@@ -9,7 +9,7 @@ module.exports = class OnekvWrapper {
   constructor(handler) {
     this.handler = handler
     this.chaindata = new ChainData(handler);
-    this.cachedata = new CacheData();
+    // this.cachedata = new CacheData();
   }
 
   valid = async (era) => {
@@ -22,12 +22,12 @@ module.exports = class OnekvWrapper {
         era = await this.chaindata.getActiveEraIndex();
       }
       
-      // check cache data to retive data
-      const data = await this.cachedata.fetch(era, 'valid');
+      // // check cache data to retive data
+      // const data = await this.cachedata.fetch(era, 'valid');
 
-      if (data !== null) {
-        return data;
-      }
+      // if (data !== null) {
+      //   return data;
+      // }
 
 
       // retrive active validators
@@ -57,7 +57,7 @@ module.exports = class OnekvWrapper {
         valid: valid,
       }
 
-      this.cachedata.update('valid', valid);
+      // this.cachedata.update('valid', valid);
 
       return valid;
     } else {
@@ -68,11 +68,11 @@ module.exports = class OnekvWrapper {
   nominators = async () => {
     // retrive active era
     const [era, err] = await this.chaindata.getActiveEraIndex();
-    // check cache data to retive data
-    const data = await this.cachedata.fetch(era, 'nominators');
-    if (data !== null) {
-      return data;
-    }
+    // // check cache data to retive data
+    // const data = await this.cachedata.fetch(era, 'nominators');
+    // if (data !== null) {
+    //   return data;
+    // }
 
     let res = await axios.get('https://kusama.w3f.community/nominators');
     if (res.status === 200) {
@@ -114,11 +114,11 @@ module.exports = class OnekvWrapper {
         nominators
       }
 
-      this.cachedata.update('nominators', nominators);
+      // this.cachedata.update('nominators', nominators);
 
       return nominators;
     } else {
-      this.cachedata.update('nominators', []);
+      // this.cachedata.update('nominators', []);
       return [];
     }
   }
