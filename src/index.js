@@ -16,7 +16,7 @@ const API = {
   Statistic: API_PREFIX + '/statistic/:stash',
   FalseNominations: API_PREFIX + '/falseNominations',
   Validators: API_PREFIX + '/validators',
-  onekv: API_PREFIX + '/onekv',
+  onekvlist: API_PREFIX + '/onekvlist',
   Certbot: '/.well-known/acme-challenge/NyFCixcgJXG-gyG0iclY9YPSt94rTXhnGsvlxDyy1Xc'
 }
 
@@ -63,17 +63,20 @@ app.use(bodyparser());
       ctx.body = validators;
     });
 
-    router.get(API.onekv, async (ctx) => {
+    router.get(API.onekvlist, async (ctx) => {
+      const rate = (ctx.request.query.rate/100) || 1;
       const validators = await onekvWrapper.getValidators();
       let list = [];
       validators.valid.forEach((validator) => {
-        list.push({
-          stash: validator.stash,
-          name: validator.name,
-          rank: validator.rank,
-          electedRate: validator.electedRate,
-          eras: `from ${validator.stakerPoints[0].era} to ${validator.stakerPoints[validator.stakerPoints.length - 1].era}`,
-        })
+        if (validator.electedRate <= rate) {
+          list.push({
+            stash: validator.stash,
+            name: validator.name,
+            rank: validator.rank,
+            electedRate: validator.electedRate,
+            eras: `from ${validator.stakerPoints[0].era} to ${validator.stakerPoints[validator.stakerPoints.length - 1].era}`,
+          })
+        }
       })
       ctx.body = list;
     })
