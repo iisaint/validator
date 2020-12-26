@@ -8,13 +8,15 @@ const ApiHandler = require('./ApiHandler');
 const OnekvWrapper = require('./onekvWrapper');
 const keys = require('./config/keys');
 
+const API_PREFIX = '/api';
+
 const API = {
-  ValidCandidates: '/valid',
-  Nominators: '/nominators',
-  Statistic: '/statistic/:stash',
-  FalseNominations: '/falseNominations',
-  Validators: '/validators',
-  onekv: '/onekv',
+  ValidCandidates: API_PREFIX + '/valid',
+  Nominators: API_PREFIX + '/nominators',
+  Statistic: API_PREFIX + '/statistic/:stash',
+  FalseNominations: API_PREFIX + '/falseNominations',
+  Validators: API_PREFIX + '/validators',
+  onekv: API_PREFIX + '/onekv',
   Certbot: '/.well-known/acme-challenge/NyFCixcgJXG-gyG0iclY9YPSt94rTXhnGsvlxDyy1Xc'
 }
 
