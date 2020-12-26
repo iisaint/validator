@@ -15,6 +15,7 @@ const API = {
   FalseNominations: '/falseNominations',
   Validators: '/validators',
   onekv: '/onekv',
+  Certbot: '/.well-known/acme-challenge/NyFCixcgJXG-gyG0iclY9YPSt94rTXhnGsvlxDyy1Xc'
 }
 
 const app = new Koa();
@@ -73,6 +74,10 @@ app.use(bodyparser());
         })
       })
       ctx.body = list;
+    })
+
+    router.get(API.Certbot, async (ctx) => {
+      ctx.body = 'NyFCixcgJXG-gyG0iclY9YPSt94rTXhnGsvlxDyy1Xc';
     })
 
     app.use(router.routes());
