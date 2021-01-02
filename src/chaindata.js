@@ -147,4 +147,75 @@ module.exports = class ChainData {
     const stakerPoints = await api.derive.staking.stakerPoints(stash);
     return stakerPoints;
   }
+
+  getNominators = async () => {
+    const api = await this.handler.getApi();
+    const nominators = await api.query.staking.nominators.entries();
+    return nominators;
+  }
+
+  getValidatorWaitingInfo = async () => {
+    const api = await this.handler.getApi();
+
+    const [activeEra, err] = await this.getActiveEraIndex();
+    const [blockHash, err2] = await this.findEraBlockHash(activeEra);
+
+    let validators = []
+    let intentions = []
+
+    const [
+      validatorAddresses,
+      waitingInfo,
+      nominators,
+    ] = await Promise.all([
+      api.query.session.validators(),
+      api.derive.staking.waitingInfo(),
+      api.query.staking.nominators.entries(),
+    ])
+    validators = await Promise.all(
+      validatorAddresses.map((authorityId) =>
+        api.derive.staking.query(authorityId, {
+          withDestination: true,
+          withExposure: true,
+          withLedger: true,
+          withNominations: true,
+          withPrefs: true,
+        })
+      )
+    )
+    validators = await Promise.all(
+      validators.map((validator) =>
+        api.derive.accounts.info(validator.accountId).then(({ identity }) => {
+          return {
+            ...validator,
+            identity,
+            active: true,
+          }
+        })
+      )
+    )
+    intentions = await Promise.all(
+      JSON.parse(JSON.stringify(waitingInfo.info)).map((intention) =>
+        api.derive.accounts.info(intention.accountId).then(({ identity }) => {
+          return {
+            ...intention,
+            identity,
+            active: false,
+          }
+        })
+      )
+    )
+    const nominations = nominators.map(([key, nominations]) => {
+      const nominator = key.toHuman()[0];
+      const targets = nominations.toHuman().targets;
+      return {
+        nominator,
+        targets
+      }
+    })
+    return {
+      validators: validators.concat(intentions),
+      nominations
+    }
+  }
 }

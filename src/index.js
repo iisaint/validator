@@ -17,7 +17,7 @@ const API = {
   FalseNominations: API_PREFIX + '/falseNominations',
   Validators: API_PREFIX + '/validators',
   onekvlist: API_PREFIX + '/onekvlist',
-  Certbot: '/.well-known/acme-challenge/NyFCixcgJXG-gyG0iclY9YPSt94rTXhnGsvlxDyy1Xc'
+  test: API_PREFIX + '/test',
 }
 
 const app = new Koa();
@@ -75,15 +75,16 @@ app.use(bodyparser());
             rank: validator.rank,
             electedRate: validator.electedRate,
             eras: `from ${validator.stakerPoints[0].era} to ${validator.stakerPoints[validator.stakerPoints.length - 1].era}`,
+            stakerPoints: validator.stakerPoints,
           })
         }
       })
       ctx.body = list;
     })
 
-    router.get(API.Certbot, async (ctx) => {
-      ctx.body = 'NyFCixcgJXG-gyG0iclY9YPSt94rTXhnGsvlxDyy1Xc';
-    })
+    router.get(API.test, async (ctx) => {
+      ctx.body = [];
+    });
 
     app.use(router.routes());
 
