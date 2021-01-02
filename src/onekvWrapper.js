@@ -18,61 +18,29 @@ module.exports = class OnekvWrapper {
       return [];
     }
 
-    const [activeEra, err] = await this.chaindata.getActiveEraIndex();
-
     let valid = res.data;
-    let {validators, nominations} = await this.chaindata.getValidatorWaitingInfo();
-
+    const [activeEra, activeStash] = await this.chaindata.getValidators();
     let electedCount = 0;
-    valid = await Promise.all(valid.map(async (candidate) => {
-      const stakingInfo = validators.find((validator) => {
-        return validator.accountId.toString() === candidate.stash;
-      });
-      if (stakingInfo === undefined) {
-        candidate.missing = true;
-        candidate.elected = false;
-        candidate.activeNominators = 0;
-        candidate.totalNominators = 0;
-        candidate.stakingInfo = null;
+    valid = valid.map((candidate) => {
+      candidate.discoveredAt = moment(candidate.discoveredAt).format();
+      candidate.nominatedAt = moment(candidate.nominatedAt).format();
+      candidate.onlineSince = moment(candidate.onlineSince).format();
+      if (activeStash.indexOf(candidate.stash) !== -1) {
+        candidate.elected = true;
+        electedCount++;
       } else {
-        candidate.elected = stakingInfo.active;
-        candidate.activeNominators = candidate.elected ? stakingInfo.exposure.others.length : 0;
-        const nominators = nominations.filter((nomination) => {
-          return nomination.targets.some((target) => {
-            return target === candidate.stash;
-          })
-        })
-        candidate.totalNominators = nominators.length;
-        stakingInfo.nominators = nominators.map((element) => {
-          return element.nominator;
-        })
-        candidate.stakingInfo = stakingInfo;
-        if (candidate.elected) {
-          electedCount++;
-        }
-
-        const stakerPoints = await this.chaindata.getStakerPoints(candidate.stash);
-        let count = 0;
-        stakerPoints.forEach((era) => {
-          if (parseInt(era.points) !== 0) {
-            count++;
-          }
-        });
-        candidate.electedRate = count / stakerPoints.length;
-        candidate.stakerPoints = stakerPoints;
-
+        candidate.elected = false;
       }
       return candidate;
-    }))
+    })
 
     valid = {
       activeEra,
       validatorCount: valid.length,
       electedCount,
       electionRate: (electedCount / valid.length),
-      valid: valid,
+      valid,
     }
-
     return valid;
   }
 
@@ -247,6 +215,83 @@ module.exports = class OnekvWrapper {
   getNominators = async () => {
     const data = await this.chaindata.getNominators();
     return data;
+  }
+
+  getValidDetail = async () => {
+    const startTime = new Date().getTime();
+    const res = await axios.get('https://kusama.w3f.community/valid');
+    if (res.status !== 200 && res.data.length === 0) {
+      return [];
+    }
+
+    const [activeEra, err] = await this.chaindata.getActiveEraIndex();
+
+    let valid = res.data;
+    let {validators, nominations} = await this.chaindata.getValidatorWaitingInfo();
+    const dataCollectionEndTime = new Date().getTime();
+    const dataCollectionTime = dataCollectionEndTime - startTime
+    // eslint-disable-next-line
+    console.log(
+      `data collection time: ${(dataCollectionTime / 1000).toFixed(3)}s`
+    )
+    
+    const dataProcessStartTime = new Date().getTime();
+    let electedCount = 0;
+    valid = await Promise.all(valid.map(async (candidate) => {
+      const stakingInfo = validators.find((validator) => {
+        return validator.accountId.toString() === candidate.stash;
+      });
+      if (stakingInfo === undefined) {
+        candidate.missing = true;
+        candidate.elected = false;
+        candidate.activeNominators = 0;
+        candidate.totalNominators = 0;
+        candidate.stakingInfo = null;
+      } else {
+        candidate.elected = stakingInfo.active;
+        candidate.activeNominators = candidate.elected ? stakingInfo.exposure.others.length : 0;
+        const nominators = nominations.filter((nomination) => {
+          return nomination.targets.some((target) => {
+            return target === candidate.stash;
+          })
+        })
+        candidate.totalNominators = nominators.length;
+        stakingInfo.nominators = nominators.map((element) => {
+          return element.nominator;
+        })
+        candidate.stakingInfo = stakingInfo;
+        if (candidate.elected) {
+          electedCount++;
+        }
+
+        const stakerPoints = await this.chaindata.getStakerPoints(candidate.stash);
+        let count = 0;
+        stakerPoints.forEach((era) => {
+          if (parseInt(era.points) !== 0) {
+            count++;
+          }
+        });
+        candidate.electedRate = count / stakerPoints.length;
+        candidate.stakerPoints = stakerPoints;
+
+      }
+      return candidate;
+    }))
+    const dataProcessEndTime = new Date().getTime();
+    const dataProcessTime = dataProcessEndTime - dataProcessStartTime;
+    // eslint-disable-next-line
+    console.log(
+      `data process time: ${(dataProcessTime / 1000).toFixed(3)}s`
+    )
+    valid = {
+      activeEra,
+      validatorCount: valid.length,
+      electedCount,
+      electionRate: (electedCount / valid.length),
+      valid: valid,
+    }
+
+    return valid;
   }
 }
 

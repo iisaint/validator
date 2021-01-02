@@ -17,6 +17,7 @@ const API = {
   FalseNominations: API_PREFIX + '/falseNominations',
   Validators: API_PREFIX + '/validators',
   onekvlist: API_PREFIX + '/onekvlist',
+  ValidDetail: API_PREFIX + '/validDetail',
   test: API_PREFIX + '/test',
 }
 
@@ -81,6 +82,11 @@ app.use(bodyparser());
       })
       ctx.body = list;
     })
+
+    router.get(API.ValidDetail, async (ctx) => {
+      const valid = await onekvWrapper.getValidDetail();
+      ctx.body = valid;
+    });
 
     router.get(API.test, async (ctx) => {
       ctx.body = [];
